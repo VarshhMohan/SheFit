@@ -43,6 +43,50 @@ def load_user(user_id):
 
 #----------------------------------------------------------Classes--------------------------------------------------------------------------#
 #region
+class Package(db.Model):
+    pkg_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    name = db.Column(db.String(20))
+    duration = db.Column(db.Integer)
+    feature_coach = db.Column(db.Boolean)
+    feature_dietician = db.Column(db.Boolean)
+    feature_lounge = db.Column(db.Boolean)
+    feature_courses = db.Column(db.Boolean)
+    feature_schedules = db.Column(db.Boolean)
+    price = db.Column(db.Integer)
+
+    def __init__(self, name, duration, coach, dietician, lounge, courses, schedules, price):
+        self.name = name
+        self.duration = duration
+        self.feature_coach = coach
+        self.feature_dietician = dietician
+        self.feature_lounge = lounge
+        self.feature_courses = courses
+        self.feature_schedules = schedules
+        self.price = price
+        db.session.add(self)
+        db.session.commit()
+
+    
+    def delete(id):
+        del_pkg = Package.query.get(id)
+        db.session.delete(del_pkg)
+        db.session.commit()
+    
+    def modify(self,name,duration,description,price):
+        self.name = name
+        self.duration = duration
+        self.description = description
+        self.price = price
+        db.session.commit()
+
+
+class Subscription(db.Model):
+    subscription_id = db.Column(db.Integer,primary_key=True,autoincrement=True)
+    pkg_id = db.Column(db.Integer)
+    mem_id = db.Column(db.String(10))
+    completed = db.Column(db.Integer)
+
+
 class Members(db.Model,UserMixin):
     id = db.Column(db.String(10), primary_key=True)
     name = db.Column(db.String(100))
@@ -64,7 +108,7 @@ class Members(db.Model,UserMixin):
             last_id = int(last_mem.id[3:])
         self.id = f"mem{last_id+1}"
 
-    def assign_trainer(self,trainer_id):
+    def choose_trainer(self,trainer_id):
         self.trainer = trainer_id
         db.session.add(self)
         db.session.commit()
@@ -72,6 +116,7 @@ class Members(db.Model,UserMixin):
     def register(self):
         db.session.add(self)
         db.session.commit()
+  
 
 class Trainers(db.Model,UserMixin):
     id = db.Column(db.String(10), primary_key=True)
@@ -82,18 +127,35 @@ class Trainers(db.Model,UserMixin):
     trainer_since = db.Column(db.DateTime)
     password = db.Column(db.String(128), nullable=False)
 
-    def __init__(self, name, phone_number, email, password, experience, trainer_since):
+    def __init__(self, name, phone_number, email, password, experience):
         last_train = Trainers.query.order_by(Trainers.id.desc()).first()
         self.name = name
         self.phone_number = phone_number
         self.email = email
-        self.trainer_since = trainer_since
+        self.trainer_since = datetime.now()
         self.experience = experience
         self.password = ph.hash(password)
         last_id=0
         if last_train:
             last_id = int(last_train.id[3:])
         self.id = f"tra{last_id+1}"
+
+    def list_trainers():
+        trainer_list = Trainers.query.all()
+        return trainer_list
+    
+    def delete(id):
+        del_trainer = Trainers.query.get(id)
+        db.session.delete(del_trainer)
+        db.session.commit()
+
+    def modify(self, name, phone_number, email, experience):
+        self.name = name
+        self.phone_number = phone_number
+        self.email = email
+        self.experience = experience
+        db.session.commit()
+
 
 class Admin(db.Model,UserMixin):
     id   = db.Column(db.String(10), primary_key=True)
@@ -103,7 +165,7 @@ class Admin(db.Model,UserMixin):
     password = db.Column(db.String(128), nullable=False)
 
     def __init__(self, name, phone_number, email, password):
-        last_adm = Admin.query.order_by(Admin.id    .desc()).first()
+        last_adm = Admin.query.order_by(Admin.id.desc()).first()
         self.name = name
         self.phone_number = phone_number
         self.email = email
@@ -113,8 +175,9 @@ class Admin(db.Model,UserMixin):
             last_id = int(last_adm.id[3:])
         self.id  = f"adm{last_id+1}"
 
+
 class DietPro(db.Model):
-    dietid   = db.Column(db.String(10), primary_key=True, autoincrement=True)
+    dietid   = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(100))
     member_id = db.Column(db.String(10))
     gender = db.Column(db.String(10))
@@ -181,7 +244,8 @@ class DietPro(db.Model):
 #home page
 @app.route('/')
 def homepage():
-    return render_template('index.html', app_name='BulkBois', description='For the GymBros')
+    packages = Package.query.all()
+    return render_template('index.html', pkgs=packages)
 
 #Member registration
 @app.route('/register', methods=["GET", "POST"])
@@ -366,7 +430,7 @@ def create_admin():
         existing_admin = Admin.query.filter_by(email=email).first()
 
         if existing_admin:
-            return render_template("signup.html",message_id=1)
+            return render_template("register.html",message_id=1)
         elif ph.verify(app.secret_key,dev_pass):
 
             # Create a new member
@@ -413,7 +477,7 @@ def admin_login():
 def admin_panel():
     admin = current_user
     if isinstance(admin,Admin):
-        return admin.email
+        return render_template('admin/index.html',admin=admin)
     return redirect(url_for("admin_login"))
 
 #hire trainer
@@ -427,26 +491,119 @@ def hire_trainer():
             experience = request.form.get("experience")
             email = request.form.get("email")
             passwd = request.form.get("password")
-            trainer_since = datetime.now()
 
             existing_trainer = Trainers.query.filter_by(email=email).first()
             if existing_trainer:
-                return render_template('/admin/hiretrainer.html', message_id=1)
+                return render_template('/admin/hiretrainer.html', message_id=1,admin=admin)
             else:
                 trainer = Trainers(
                     name = name,
                     phone_number = phone_number,
                     experience = experience,
                     email = email,
-                    password = passwd,
-                    trainer_since = trainer_since
+                    password = passwd
                     )
                 
                 db.session.add(trainer)
                 db.session.commit()
-                return "Trainer Registered Successfully"
-        return render_template('/admin/hiretrainer.html')
+                return redirect(url_for('trainer_manager'))
+        return redirect(url_for('trainer_manager'))
     return redirect(url_for('admin_login'))
+
+@app.route('/admin/trainers')
+def trainer_manager():
+    admin = current_user
+    if not isinstance(admin,Admin):
+        return redirect(url_for('admin_login'))
+    trainer_list = Trainers.query.all()
+    return render_template('/admin/trainers.html',admin=admin,trainers=trainer_list)
+
+@app.route("/admin/trainer/delete", methods=["POST"])
+def delete_trainer():
+    admin = current_user
+    if not isinstance(admin,Admin):
+        return redirect(url_for('admin_login'))
+    trainer_id = request.form.get('id')
+    Trainers.delete(trainer_id)
+    return redirect(url_for('trainer_manager'))
+
+@app.route("/admin/trainer/modify",methods=["GET","POST"])
+def modify_trainer():
+    admin = current_user
+    if not isinstance(admin,Admin):
+        return redirect(url_for('admin_login'))
+    id = request.args.get('id')
+    trainer = Trainers.query.get(id)
+
+    if request.method == 'POST':
+        name = request.form.get('name')
+        phone_number = request.form.get('phone_number')
+        email = request.form.get('email')
+        experience = request.form.get('experience')
+        trainer.modify(name, phone_number, email, experience)
+
+
+        return redirect(url_for('trainer_manager')) 
+
+    return render_template("/admin/trainer_modify.html",admin=admin, trainer=trainer)
+
+
+@app.route("/admin/package")
+def package_manager():
+    admin = current_user
+    if not isinstance(admin,Admin):
+        return redirect(url_for('admin_login'))
+    package_list = Package.query.all()
+    return render_template('/admin/package.html',admin=admin,pkgs=package_list)
+    
+
+@app.route("/admin/package/add", methods=["POST"])
+def add_package():
+    admin = current_user
+    if not isinstance(admin, Admin):
+        return redirect(url_for('admin_login'))
+    if request.method == 'POST':
+        name = request.form['name']
+        duration = int(request.form['duration'])
+        feature_coach = 'feature_coach' in request.form
+        feature_dietician = 'feature_dietician' in request.form
+        feature_lounge = 'feature_lounge' in request.form
+        feature_courses = 'feature_courses' in request.form
+        feature_schedules = 'feature_schedules' in request.form
+        price = int(request.form['price'])
+
+        Package(name, duration, feature_coach, feature_dietician, feature_lounge, feature_courses, feature_schedules, price)
+    
+    return redirect(url_for('package_manager'))
+
+
+@app.route("/admin/package/delete", methods=["POST"])
+def delete_package():
+    admin = current_user
+    if not isinstance(admin,Admin):
+        return redirect(url_for('admin_login'))
+    package_id = int(request.form.get('id'))
+    Package.delete(package_id)
+    return redirect(url_for('package_manager'))
+
+@app.route("/admin/package/modify",methods=["GET","POST"])
+def modify_package():
+    admin = current_user
+    if not isinstance(admin,Admin):
+        return redirect(url_for('admin_login'))
+    id = request.args.get('id')
+    package = Package.query.get(id)
+
+    if request.method == 'POST':
+        name = request.form.get('name')
+        duration = request.form.get('duration')
+        description = request.form.get('description')
+        price = request.form.get('price')
+        package.modify(name,duration,description,price)
+
+        return redirect(url_for('package_manager')) 
+
+    return render_template("/admin/package_modify.html",admin=admin, package=package)
 
 #admin logout
 @app.route("/admin/logout")
@@ -457,7 +614,6 @@ def admin_logout():
         return redirect(url_for("homepage"))
 
 #endregion
-
 #---------------------------------------------------------------Run Flask--------------------------------------------------------------------#
 if __name__ == '__main__':
-    app.run()
+    app.run('127.0.0.2','80')
