@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<!-- Created By CodingNepal -->
+<html lang="en" dir="ltr">
+   <head>
+      <meta charset="utf-8">
+      <title>SheFit-Login</title>
+      <link href="../static/img/icons8-star-filled-50.png" rel="icon">
+      <link rel="stylesheet" href="../static/css/style.css">
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
+   </head>
+
+   <body>
+      <div class="container" style="border-radius: 10px;">
+         <header style="font-size: x-large;font-weight: bold;">LOGIN</header>
+         <form action="#" method="post">
+            <div class="input-field">
+                <input type="text" name="email" required>
+                <label>Email</label>
+            </div>
+            <div class="input-field">
+               <input class="pswrd" type="password" name="password" required>
+               <span class="show">SHOW</span>
+               <label>Password</label>
+            </div>
+            {%if message%}
+              <p style="color: brown;">{{message}}</p>
+            {%endif%}
+            <div class="button">
+               <div class="inner"></div>
+               <button>LOGIN</button>
+            </div>
+         </form>
+         <div class="signup">
+            Not a member?  <a href="{{url_for('register')}}">Signup!</a>
+         </div>
+      </div>
+      <script>
+         var input = document.querySelector('.pswrd');
+         var show = document.querySelector('.show');
+         show.addEventListener('click', active);
+         function active(){
+           if(input.type === "password"){
+             input.type = "text";
+             show.style.color = "#111";
+             show.textContent = "HIDE";
+           }else{
+             input.type = "password";
+             show.textContent = "SHOW";
+             show.style.color = "#111";
+           }
+         }
+      </script>
+   </body>
+</html>
+
+<style>
+    @import url('https://fonts.googleapis.com/css?family=Montserrat:600|Noto+Sans|Open+Sans:400,700&display=swap');
+*{
+  margin: 0;
+  padding: 0;
+  border-radius: 15px;
+  box-sizing: border-box;
+}
+body{
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  text-align: center;
+  font-family: sans-serif;
+  justify-content: left;
+  padding-left:100px;
+  background: url('../static/img/bradley-dunn-ACbu5AY5Tvk-unsplash.jpg');
+  background-size: cover;
+  background-position: center;
+}
+.container{
+  display: box;
+  box-shadow: 5px 5px 10px #171616;
+  position: relative;
+  /*background-color: #b3926daf;*/
+  width: 375px;
+  padding: 30px 40px;
+}
+header{
+  font-size: 40px;
+  margin-bottom: 20px;
+  color: #171616;
+}
+.input-field, form .button{
+  display:box;
+  box-shadow: 2px 2px 5px #171616;
+  margin: 15px 0;
+  position: relative;
+  height: 45px;
+  width: 100%;
+}
+.input-field input{
+  height: 100%;
+  width: 100%;
+  border: none;
+  padding-left: 15px;
+  outline: none;
+  font-size: 15px;
+  transition: .4s;
+}
+input:focus{
+  border: 1px solid #444a4e;
+}
+.input-field label, span.show{
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+}
+.input-field label{
+  left: 15px;
+  pointer-events: none;
+  color: grey;
+  font-size: 18px;
+  transition: .4s;
+}
+span.show{
+  right: 20px;
+  color: #171616;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  user-select: none;
+  visibility: hidden;
+  font-family: 'Open Sans', sans-serif;
+}
+input:valid ~ span.show{
+  visibility: visible;
+}
+input:focus ~ label,
+input:valid ~ label{
+  transform: translateY(-33px);
+  background: white;
+  font-size: 16px;
+  color: #171616;
+}
+form .button{
+  margin-top: 25px;
+  overflow: hidden;
+  z-index: 111;
+}
+.button .inner{
+  position: absolute;
+  height: 100%;
+  width: 300%;
+  left: -100%;
+  z-index: -1;
+  transition: all .4s;
+  background-color: #171616;
+}
+.button:hover .inner{
+  left: 0;
+}
+.button button{
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: none;
+  outline: none;
+  color: ivory;
+  font-size: 15px;
+  cursor: pointer;
+  font-family: 'Montserrat', sans-serif;
+}
+.container .auth{
+  margin: 35px 0 20px 0;
+  font-size: 19px;
+  color: grey;
+}
+
+.signup{
+  margin-top: 20px;
+  color:white;
+  font-family: 'Noto Sans', sans-serif;
+}
+.signup a{
+  color: #171616;
+  text-decoration: none;
+}
+.signup a:hover{
+  text-decoration: underline;
+}
+</style>
