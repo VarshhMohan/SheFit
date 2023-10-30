@@ -7,7 +7,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, current_user
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
-from datetime import datetime 
+from datetime import datetime, date
 
 
 
@@ -84,7 +84,17 @@ class Subscription(db.Model):
     subscription_id = db.Column(db.Integer,primary_key=True,autoincrement=True)
     pkg_id = db.Column(db.Integer)
     mem_id = db.Column(db.String(10))
+    tra_id = db.Column(db.String(10))
     completed = db.Column(db.Integer)
+
+    def __init__(self,pkg_id,mem_id,tra_id):
+        self.pkg_id = pkg_id
+        self.mem_id = mem_id
+        self.tra_id = tra_id
+        self.completed = 0
+        db.session.add(self)
+        db.session.commit()
+    
 
 
 class Members(db.Model,UserMixin):
@@ -94,7 +104,6 @@ class Members(db.Model,UserMixin):
     email = db.Column(db.String(100), nullable=False)
     member_since = db.Column(db.DateTime)
     password = db.Column(db.String(128), nullable=False)
-    trainer = db.Column(db.String(10))
     
     def __init__(self, name, phone_number, email, password, member_since):
         last_mem = Members.query.order_by(Members.id.desc()).first()
@@ -107,11 +116,6 @@ class Members(db.Model,UserMixin):
         if last_mem:
             last_id = int(last_mem.id[3:])
         self.id = f"mem{last_id+1}"
-
-    def choose_trainer(self,trainer_id):
-        self.trainer = trainer_id
-        db.session.add(self)
-        db.session.commit()
 
     def register(self):
         db.session.add(self)
@@ -231,7 +235,42 @@ class DietPro(db.Model):
         calorie_change = 108.7573 * (weight_goal - self.weight)
         self.daily_calorie = tdee + calorie_change
 
+class Payments(db.Model):
+    payment_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    amount = db.Column(db.Float)
+    payment_date = db.Column(db.Date)
+    subscription_id = db.Column(db.Integer)
 
+class CardPayment(Payments):
+    card_number = db.Column(db.String(16))
+    card_holder = db.Column(db.String(255))
+    expiration_date = db.Column(db.String(5))
+
+    def __init__(self,amount,subs_id,card_number,card_holder,exp):
+        super().__init__(amount=amount, payment_date=date.today(), subscription_id = subs_id)
+        self.card_number = card_number
+        self.card_holder = card_holder
+        self.expiration_date = exp
+        db.session.add(self)
+        db.session.commit()
+
+class CashPayment(Payments):
+    cash_receipt_number = db.Column(db.String(10))
+
+    def __init__(self,amount,subs_id,r_no):
+        super().__init__(amount=amount, payment_date=date.today(), subscription_id = subs_id)
+        self.cash_receipt_number = r_no
+        db.session.add(self)
+        db.session.commit()
+
+class UPIPayment(Payments):
+    upi_id = db.Column(db.String(50))
+
+    def __init__(self,amount,subs_id, upi_id):
+        super().__init__(amount=amount, payment_date=date.today(), subscription_id = subs_id)
+        self.upi_id = upi_id
+        db.session.add(self)
+        db.session.commit()
 
 
         
@@ -245,7 +284,11 @@ class DietPro(db.Model):
 @app.route('/')
 def homepage():
     packages = Package.query.all()
-    return render_template('index.html', pkgs=packages)
+    member=current_user
+    if isinstance(member,Members):
+        return render_template('index.html', pkgs=packages, member=member)
+    else:
+        return render_template('index.html', pkgs=packages)
 
 #Member registration
 @app.route('/register', methods=["GET", "POST"])
@@ -310,9 +353,47 @@ def login():
 @app.route("/dashboard")
 def dashboard():
     member = current_user
-    if isinstance(member,Members):
-        return member.email
-    return redirect(url_for("login"))   
+    if not isinstance(member,Members):
+        return redirect(url_for("login"))
+    
+    subscription = Subscription.query.filter_by(mem_id=member.id).first()
+    return render_template('dashboard.html',member=member,subscription=subscription)
+
+
+@app.route('/payment/<int:id>',methods=["GET","POST"])
+def payment(id):
+    member = current_user
+    if not isinstance(member,Members):
+        return redirect(url_for('login'))
+    if request.method == 'GET':
+        package = Package.query.get(id)
+        return render_template('payment.html',package=package)
+    else:
+        payment_mode = request.form.get('payment_mode')
+        pkg_id = request.form.get('pkgid')
+        package = Package.query.get(pkg_id)
+        amt = package.price
+        subscription = Subscription(pkg_id,member.id,None)
+        subs_id = subscription.subscription_id
+        success = {'type':payment_mode}
+        if payment_mode == "card":
+            name = request.form.get('name')
+            card_number = request.form.get('card_number')
+            exp_date = request.form.get('exp_date')
+            cvv = request.form.get('cvv')
+            CardPayment(package.price, subs_id,card_number,name,exp_date)
+
+        elif payment_mode == "cash":
+            receipt = CashPayment(package.price,subs_id,'not_paid')
+            r_no = receipt.payment_id
+            success['r_no']=r_no
+
+        elif payment_mode == "upi":
+            upi_id = request.form.get('upi_id')
+            UPIPayment(package.price,subs_id,upi_id)
+        return render_template('payment.html',success=success)
+        
+
 
 #DietPro™
 @app.route("/dietpro",methods=["GET","POST"])
