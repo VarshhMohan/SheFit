@@ -21,7 +21,7 @@
                     <h3>Payment Information</h3>
 
                     <p>Payment Mode</p>
-                    <select class="inputbox" name="payment_mode" id="payment_mode" required>
+                    <select class="inputbox" name="payment_mode" id="payment_mode" >
                         <option value="">--Select a Payment Mode--</option>
                         <option value="card">Card Payment</option>
                         <option value="cash">Cash Payment</option>
@@ -31,17 +31,17 @@
 
                     <div id="cardPayment" style="display: none;">
                         <p>Cardholder Name</p>
-                        <input type="text" class="inputbox" name="name" required />
+                        <input type="text" class="inputbox" name="name"  />
 
                         <p>Card Number</p>
-                        <input type="number" class="inputbox" name="card_number" id="card_number" required />
+                        <input type="number" class="inputbox" name="card_number" id="card_number"  />
 
                         <p>Expiry Date</p>
-                        <input type="text" class="inputbox" maxlength="4" name="exp_date" placeholder="MMYY" required />
-                
+                        <input type="text" class="inputbox" maxlength="4" name="exp_date" placeholder="MMYY"  />
+
                         <p>CVV</p>
-                        <input type="password" class="inputbox" name="cvv" required />
-                        
+                        <input type="password" class="inputbox" name="cvv"  />
+
                     </div>
 
                     <div id="cashPayment" style="display: none;">
@@ -52,7 +52,7 @@
 
                     <div id="upiPayment" style="display: none;">
                         <p>UPI ID</p>
-                        <input type="text" class="inputbox" name="upi_id" required />
+                        <input type="text" class="inputbox" name="upi_id"  />
 
                         <!-- Add other UPI payment fields here -->
                     </div>
@@ -68,22 +68,24 @@
             <div class="rightside">
                 <div class="success-checkmark">
                     <div class="check-icon">
-                      <span class="icon-line line-tip"></span>
-                      <span class="icon-line line-long"></span>
-                      <div class="icon-circle"></div>
-                      <div class="icon-fix"></div>
+                        <span class="icon-line line-tip"></span>
+                        <span class="icon-line line-long"></span>
+                        <div class="icon-circle"></div>
+                        <div class="icon-fix"></div>
                     </div>
-                  </div>
-                  
+                </div>
+                <a href="{{url_for('dashboard')}}">Go to Dashboard</a>
+
             </div>
             {% else %}
             <div class="rightside">
                 <div class="success-checkmark">
                     <div class="check-icon">
-                      <p>Use this Number to Pay at Counter:</p>
-                      <h3>{{success['r_no']}}</h3>
+                        <p>Use this Number to Pay at Counter:</p>
+                        <h3>{{success['r_no']}}</h3>
                     </div>
-                  </div>
+                </div>
+                <a href="{{url_for('dashboard')}}">Go to Dashboard</a>
             </div>
             {% endif %}
         </div>
