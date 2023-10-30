@@ -472,12 +472,12 @@
         <div class="row g-4">
           {% for pkg in pkgs %}
           <div class="col-lg-4">
-            <div class="pricing-item {% if pkg.price == 2000 %}featured{% endif %}">
+            <div class="pricing-item ">
               <h3>{{pkg.name}}</h3>
               <div class="icon">
                 <i class="bi bi-box"></i>
               </div>
-              <h4>Rs {{pkg.price}}<span> / month</span></h4>
+              <h4>Rs{{pkg.price}}<span>/month</span></h4>
               <ul>
                 <li {{ "class=na" if not pkg.feature_coach }} ><i class="bi bi-{{ 'check' if pkg.feature_coach else 'x' }}"></i> <span>Dedicated Fitness Coach</span></li>
                 <li {{ "class=na" if not pkg.feature_dietician }} ><i class="bi bi-{{ 'check' if pkg.feature_dietician else 'x' }}"></i> <span>Dietician Consultations</span></li>
@@ -485,7 +485,7 @@
                 <li {{ "class=na" if not pkg.feature_courses }} ><i class="bi bi-{{ 'check' if pkg.feature_courses else 'x' }}"></i> <span>Online Courses</span></li>
                 <li {{ "class=na" if not pkg.feature_schedules }} ><i class="bi bi-{{ 'check' if pkg.feature_schedules else 'x' }}"></i> <span>Flexible Schedules</span></li>
               </ul>
-              <div class="text-center"><a href="#" class="buy-btn">Buy Now</a></div>
+              <div class="text-center"><a href="{{url_for('login')}}" class="buy-btn">Buy Now</a></div>
             </div>
           </div>
           {% endfor %}
