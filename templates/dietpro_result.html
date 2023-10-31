@@ -10,8 +10,8 @@
   <meta content="" name="keywords">
 
   <!-- Favicons -->
-  <link href="../static/img/icons8-star-filled-50.png" rel="icon">
-  <link href="../static/assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+  <link href="/static/img/icons8-star-filled-50.png" rel="icon">
+  <link href="/static/assets/img/apple-touch-icon.png" rel="apple-touch-icon">
 
   <!-- Fonts -->
   <link href="https://fonts.googleapis.com" rel="preconnect">
@@ -21,14 +21,14 @@
     rel="stylesheet">
 
   <!-- Vendor CSS Files -->
-  <link href="../static/assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-  <link href="../static/assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
-  <link href="../static/assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
-  <link href="../static/assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
-  <link href="../static/assets/vendor/aos/aos.css" rel="stylesheet">
+  <link href="/static/assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/static/assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="/static/assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
+  <link href="/static/assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
+  <link href="/static/assets/vendor/aos/aos.css" rel="stylesheet">
 
   <!-- Template Main CSS File -->
-  <link href="../static/assets/css/main.css" rel="stylesheet">
+  <link href="/static/assets/css/main.css" rel="stylesheet">
 
   <!-- =======================================================
   * Template Name: Append
@@ -37,16 +37,6 @@
   * Author: BootstrapMade.com
   * License: https://bootstrapmade.com/license/
   ======================================================== -->
-  <script>
-    function toggleElements(show) {
-      const languagesFrameworksDiv = document.getElementById('languagesFrameworks');
-      if (show) {
-        languagesFrameworksDiv.style.display = 'block';
-      } else {
-        languagesFrameworksDiv.style.display = 'none';
-      }
-    }
-  </script>
 
 </head>
 
@@ -58,7 +48,7 @@
 
       <a href="{{url_for('homepage')}}" class="logo d-flex align-items-center me-auto me-xl-0">
         <!-- Uncomment the line below if you also wish to use an image logo -->
-        <!-- <img src="../static/assets/img/logo.png" alt=""> -->
+        <!-- <img src="/static/assets/img/logo.png" alt=""> -->
         <h1>SheFit</h1>
         <span>.</span>
       </a>
@@ -88,7 +78,7 @@
     <!-- Services Details Page Title & Breadcrumbs -->
     <div data-aos="fade" class="page-title">
       <div class="heading"
-        style="background-image: url('./static/img/engin-akyurt-DW58TIkrsW4-unsplash.jpg');background-size: cover;">
+        style="background-image: url('/static/img/engin-akyurt-DW58TIkrsW4-unsplash.jpg');background-size: cover;">
         <div class="container">
           <div class="row d-flex justify-content-center text-center">
             <div class="col-lg-8" style="color:antiquewhite;">
@@ -101,123 +91,12 @@
       </div>
     </div><!-- End Page Title -->
 
-    <section id="dsurv" class="dsurv">
-      <div id="formcontainer" class="survcontainer">
-        <!-- Create Form -->
-        <form id="form" action="{{url_for('dietpro')}}" method="post">
-
-          <!-- Details -->
-          <div class="form-control">
-            <label for="name" id="label-name">Name</label>
-            <input type="text" name="name" id="name" placeholder="Enter your name" />
-          </div>
-
-          <div class="form-control">
-            <label for="gender" id="label-gender">Gender</label>
-            <input type="text" name="gender" id="gender" placeholder="Enter your gender" />
-          </div>
-
-          <div class="form-control">
-            <label for="age" id="label-age">Age</label>
-            <input type="text" name="age" id="age" placeholder="Enter your age" />
-          </div>
-
-          <div class="form-control">
-            <label for="weight" id="label-weight">Weight (in kgs)</label>
-            <input type="text" name="weight" id="weight" placeholder="Enter your weight" />
-          </div>
-
-          <div class="form-control">
-            <label for="height" id="label-height">Height (in cms)</label>
-            <input type="text" name="height" id="height" placeholder="Enter your height" />
-          </div>
-
-          <div class="form-control">
-            <label for="activity" id="label-activity">Choose your activity level</label>
-            <!-- Dropdown options -->
-            <select name="activity" id="activity">
-              <option value="" disabled selected hide></option>
-              <option value="sedentary">Sedentary</option>
-              <option value="light">Lightly active</option>
-              <option value="moderate">Moderately active</option>
-              <option value="very">Very active</option>
-            </select>
-          </div>
-
-          <div class="form-control">
-            <label>Do you suffer from any health conditions?</label>
-            <!-- Input Type Radio Button -->
-            <label for="recommed-1">
-              <input type="radio" id="recommed-1" name="health" onclick="toggleElements(true)">Yes
-            </label>
-            <label for="recommed-2">
-              <input type="radio" id="recommed-2" name="health" onclick="toggleElements(false)">No
-            </label>
-          </div>
-
-          <div class="form-control" id="languagesFrameworks" style="display:none;">
-            <label>Common ailments<small>(Check all that apply)</small></label>
-            <!-- Input Type Checkbox -->
-            <label for="inp-1"><input type="checkbox" name="inp">Diabetes</input></label>
-
-            <label for="inp-2"><input type="checkbox" name="inp">Hypertension(High Blood Pressure)</input></label>
-
-            <label for="inp-3"><input type="checkbox" name="inp">Heart Disease</input></label>
-
-            <label for="inp-4"><input type="checkbox" name="inp">Hyperlipidemia(High Cholestrol)</input></label>
-
-            <label for="inp-5"><input type="checkbox" name="inp">Celiac Disease(Gluten Sensitivity)</input></label>
-
-            <label for="inp-6"><input type="checkbox" name="inp">Irritable Bowel Syndrome(IBS)</input></label>
-
-            <label for="inp-7"><input type="checkbox" name="inp">Digestive Disorders(like GERD,Chron's Disease,Ulcer
-              etc)</input></label>
-
-            <label for="inp-8"><input type="checkbox" name="inp">Kidney Disease</input></label>
-
-            <label for="inp-9"><input type="checkbox" name="inp">Food Allergies and Intolerances</input></label>
-
-            <label for="inp-10"></label><input type="checkbox" name="inp">Obesity</input></label>
-          </div>
-
-          <div class="form-control">
-            <label for="comment">
-              Any comments or suggestions
-            </label>
-
-            <!-- multi-line text input control -->
-            <textarea name="comment" id="comment" placeholder="Enter your comment here">
-                </textarea>
-          </div>
-
-          <!-- Multi-line Text Input Control -->
-          <button type="submit" value="submit" id="submitbtn">Submit</button>
-        </form>
+      <div id="result">
+        <p>{{llama_response | safe}}</p>
       </div>
-
     </section>
-
   </main>
-  <script>
-    // Get references to the formcontainer and loader
-    const formContainer = document.getElementById('formcontainer');
-    const loader = document.getElementById('loader');
 
-    // Get a reference to the submit button
-    const submitButton = document.getElementById('submitbtn');
-
-    // Add a click event listener to the submit button
-    submitButton.addEventListener('click', function () {
-        // Toggle the visibility of the formcontainer and loader
-        if (formContainer.style.display === 'block') {
-            formContainer.style.display = 'none';
-            loader.style.display = 'block';
-        } else {
-            formContainer.style.display = 'block';
-            loader.style.display = 'none';
-        }
-    });
-</script>
   <!-- ======= Footer ======= -->
   <footer id="footer" class="footer">
 
@@ -296,16 +175,16 @@
   </div>
 
   <!-- Vendor JS Files -->
-  <script src="../static/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-  <script src="../static/assets/vendor/glightbox/js/glightbox.min.js"></script>
-  <script src="../static/assets/vendor/purecounter/purecounter_vanilla.js"></script>
-  <script src="../static/assets/vendor/isotope-layout/isotope.pkgd.min.js"></script>
-  <script src="../static/assets/vendor/swiper/swiper-bundle.min.js"></script>
-  <script src="../static/assets/vendor/aos/aos.js"></script>
-  <script src="../static/assets/vendor/php-email-form/validate.js"></script>
+  <script src="/static/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="/static/assets/vendor/glightbox/js/glightbox.min.js"></script>
+  <script src="/static/assets/vendor/purecounter/purecounter_vanilla.js"></script>
+  <script src="/static/assets/vendor/isotope-layout/isotope.pkgd.min.js"></script>
+  <script src="/static/assets/vendor/swiper/swiper-bundle.min.js"></script>
+  <script src="/static/assets/vendor/aos/aos.js"></script>
+  <script src="/static/assets/vendor/php-email-form/validate.js"></script>
 
   <!-- Template Main JS File -->
-  <script src="../static/assets/js/main.js"></script>
+  <script src="/static/assets/js/main.js"></script>
 
 </body>
 
@@ -383,5 +262,4 @@ button and Checkbox */
     margin-top: 50px;
     margin-bottom: 20px;
   }
-
 </style>

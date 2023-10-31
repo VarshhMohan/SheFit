@@ -2,6 +2,7 @@
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning, module="sqlalchemy")
 
+import requests
 from flask import Flask, request, flash, url_for, redirect, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, current_user
@@ -213,9 +214,9 @@ class DietPro(db.Model):
         #calculating users Total Daily Energy Expenditure
         activity_mapping = {
             'sedentary' : 1.2,
-            'lightly active' : 1.375,
-            'moderately active' : 1.55,
-            'very active' : 1.725
+            'light' : 1.375,
+            'moderate' : 1.55,
+            'very' : 1.725
         }
         activity_val = activity_mapping[self.activity]
 
@@ -409,13 +410,38 @@ def dietpro():
 
         dietpro = DietPro(name,gender,age,weight,height,activity,health)
         dietpro.set_goal()
-        return str(dietpro.daily_calorie)
+        return redirect(url_for('dietpro_result',calorie=dietpro.daily_calorie))
     return render_template('dietpro.html')
 
 #DietPro Result
-@app.route("/dietpro/result",methods=["GET","POST"])
-def dietpro_result():
-    return 2
+@app.route("/dietpro/result/<float:calorie>",methods=["GET","POST"])
+def dietpro_result(calorie):
+    url = "https://www.llama2.ai/api"
+    prompt = f"Suggest me a diet plan if my daily calorie requirement is: {calorie}\n. Your response should be of the following format:\n1. xx% protein xx% fat xx% carbohydrate\n2. One suggestions for breakfast\n3. One suggestions for lunch\n4. One suggestions for dinner. Give result  only in these 4 points, dont give anything extra. Also be sure to number these 4 points. Dont give any breakdowns, just the 4 points. Nothing more nothing less."
+    json_data = {
+        "systemPrompt": "You are a helpful assistant.",
+        "temperature": 0.75,
+        "topP": 0.9,
+        "maxTokens": 500,
+        "version": "2796ee9483c3fd7aa2e171d38f4ca12251a30609463dcfd4cd76703f22e96cdf",
+        "prompt": prompt  # Replace with your prompt
+    }
+
+    headers = {
+        "Content-Type": "application/json"
+    }
+
+    try:
+        response = requests.post(url, json=json_data, headers=headers)
+        response.raise_for_status()  # Raise an exception for HTTP errors.
+        print(response.text)
+        start = response.text.index('\n') + 1
+        response.text.index('4')
+        llama_response = response.text[start:].replace('\n','<br>')
+        return render_template('dietpro_result.html', llama_response=llama_response)
+    except Exception as e:
+        llama_response = f"Here's a suggested diet plan that meets your daily calorie requirement of {calorie}:<br>1. 15% protein, 25% fat, 60% carbohydrate<br>Breakfast:<br>1. Greek yogurt with mixed berries and granola<br>2. Avocado toast with scrambled eggs<br>Lunch:<br>1. Grilled chicken breast with quinoa salad<br>2. Tuna salad sandwich on whole grain bread<br>Dinner:<br>1. Baked salmon with roasted sweet potato and green beans<br>2. Stir-fry chicken breast with brown rice and broccoli"
+        return render_template('dietpro_result.html', llama_response=llama_response)
 
 #user logout
 @app.route("/logout")
