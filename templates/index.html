@@ -69,9 +69,15 @@
       </nav><!-- End Nav Menu -->
 
       
-      <!--MAKE THIS INTO LOGIN!!!!-->  
+      {% if member %}
+      <a href="#">
+        <img src="/static/admin/assets/img/messages-3.jpg" alt="" class="rounded-circle"
+          style="height: 5vh;border: 1vw;">
+        {{member.name}}
+      </a>
+      {% else %}
       <a class="btn-getstarted" href="{{url_for('login')}}" style="background-color: #896031;">Login</a>
-
+      {% endif %}
     </div>
   </header><!-- End Header -->
 

@@ -68,7 +68,15 @@
         <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
       </nav><!-- End Nav Menu -->
 
-      <a class="btn-getstarted" href="#survey">Take Survey</a>
+      {% if member %}
+      <a href="{{url_for('login')}}">
+        <img src="/static/admin/assets/img/messages-3.jpg" alt="" class="rounded-circle"
+          style="height: 5vh;border: 1vw;">
+        {{member.name}}
+      </a>
+      {% else %}
+      <a class="btn-getstarted" href="{{url_for('login')}}" style="background-color: #896031;">Login</a>
+      {% endif %}
 
     </div>
   </header><!-- End Header -->

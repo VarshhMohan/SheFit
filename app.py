@@ -433,8 +433,8 @@ def dietpro():
         if isinstance(current_user,Members):
             dietpro.save(current_user)
 
-        return redirect(url_for('dietpro_result',calorie=dietpro.daily_calorie))
-    return render_template('dietpro.html')
+        return redirect(url_for('dietpro_result',member=current_user,calorie=dietpro.daily_calorie))
+    return render_template('dietpro.html',member=current_user)
 
 #DietPro Result
 @app.route("/dietpro/result/<float:calorie>",methods=["GET","POST"])
@@ -466,13 +466,13 @@ def dietpro_result(calorie):
             DietPro.recommendation_save(member,llama_response)
             return render_template('dietpro_result.html', llama_response=llama_response,member=member)
         else:
-            return render_template('dietpro_result.html', llama_response=llama_response)
+            return render_template('dietpro_result.html', member=member,llama_response=llama_response)
     except Exception as e:
         llama_response = f"Here's a suggested diet plan that meets your daily calorie requirement of {calorie}:<br>1. 15% protein, 25% fat, 60% carbohydrate<br>Breakfast:<br>1. Greek yogurt with mixed berries and granola<br>2. Avocado toast with scrambled eggs<br>Lunch:<br>1. Grilled chicken breast with quinoa salad<br>2. Tuna salad sandwich on whole grain bread<br>Dinner:<br>1. Baked salmon with roasted sweet potato and green beans<br>2. Stir-fry chicken breast with brown rice and broccoli"
         if isinstance(member,Members):
-            return render_template('dietpro_result.html', llama_response=llama_response,member=member)
+            return render_template('dietpro_result.html', member=member, llama_response=llama_response)
         else:
-            return render_template('dietpro_result.html', llama_response=llama_response)
+            return render_template('dietpro_result.html', member=member, llama_response=llama_response)
 
 #user logout
 @app.route("/logout")
