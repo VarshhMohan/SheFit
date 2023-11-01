@@ -8,7 +8,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, current_user
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 
 
 
@@ -87,12 +87,17 @@ class Subscription(db.Model):
     mem_id = db.Column(db.String(10))
     tra_id = db.Column(db.String(10))
     completed = db.Column(db.Integer)
+    date = db.Column(db.Date)
+    end_date = db.Column(db.Date)
 
     def __init__(self,pkg_id,mem_id,tra_id):
         self.pkg_id = pkg_id
         self.mem_id = mem_id
         self.tra_id = tra_id
         self.completed = 0
+        self.date = date.today()
+        pkg = Package.query.get(pkg_id)
+        self.end_date = self.date+ timedelta(days=pkg.duration)
         db.session.add(self)
         db.session.commit()
     
@@ -239,7 +244,7 @@ class DietPro(db.Model):
 
         #calculate users calorie goal for daily intake
         calorie_change = 108.7573 * (weight_goal - self.weight)
-        self.daily_calorie = tdee + calorie_change
+        self.daily_calorie = abs(tdee + calorie_change)
 
     def recommendation_save(member,recommendation):
         dietpro = DietPro.query.filter_by(member_id=member.id).first()
@@ -364,11 +369,15 @@ def login():
 @app.route("/dashboard")
 def dashboard():
     member = current_user
+    package = None
     if not isinstance(member,Members):
         return redirect(url_for("login"))
     
     subscription = Subscription.query.filter_by(mem_id=member.id).first()
-    return render_template('dashboard.html',member=member,subscription=subscription)
+    dietpro = DietPro.query.filter_by(member_id=member.id).first()
+    if subscription:
+        package = Package.query.get(subscription.pkg_id)
+    return render_template('dashboard.html',member=member,subscription=subscription,dietpro=dietpro,package=package)
 
 
 @app.route('/payment/<int:id>',methods=["GET","POST"])
@@ -424,8 +433,8 @@ def dietpro():
         if isinstance(current_user,Members):
             dietpro.save(current_user)
 
-        return redirect(url_for('dietpro_result',calorie=dietpro.daily_calorie))
-    return render_template('dietpro.html')
+        return redirect(url_for('dietpro_result',member=current_user,calorie=dietpro.daily_calorie))
+    return render_template('dietpro.html',member=current_user)
 
 #DietPro Result
 @app.route("/dietpro/result/<float:calorie>",methods=["GET","POST"])
@@ -457,13 +466,13 @@ def dietpro_result(calorie):
             DietPro.recommendation_save(member,llama_response)
             return render_template('dietpro_result.html', llama_response=llama_response,member=member)
         else:
-            return render_template('dietpro_result.html', llama_response=llama_response)
+            return render_template('dietpro_result.html', member=member,llama_response=llama_response)
     except Exception as e:
         llama_response = f"Here's a suggested diet plan that meets your daily calorie requirement of {calorie}:<br>1. 15% protein, 25% fat, 60% carbohydrate<br>Breakfast:<br>1. Greek yogurt with mixed berries and granola<br>2. Avocado toast with scrambled eggs<br>Lunch:<br>1. Grilled chicken breast with quinoa salad<br>2. Tuna salad sandwich on whole grain bread<br>Dinner:<br>1. Baked salmon with roasted sweet potato and green beans<br>2. Stir-fry chicken breast with brown rice and broccoli"
         if isinstance(member,Members):
-            return render_template('dietpro_result.html', llama_response=llama_response,member=member)
+            return render_template('dietpro_result.html', member=member, llama_response=llama_response)
         else:
-            return render_template('dietpro_result.html', llama_response=llama_response)
+            return render_template('dietpro_result.html', member=member, llama_response=llama_response)
 
 #user logout
 @app.route("/logout")
