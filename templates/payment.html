@@ -9,10 +9,10 @@
 
 <body>
     <div class="mainscreen_div">
-        <img src="/static/img/paybg.avif" class="mainscreen" alt="">
+        <img src="/static/img/thomas-heintz-0tgMnMIYQ9Y-unsplash.jpg" class="mainscreen" alt="">
         <div class="card">
             <div class="leftside">
-                <img src="/static/img/bro.avif" class="product" alt="Shoes" />
+                <img src="/static/img/sushil-ghimire-5UbIqV58CW8-unsplash.jpg" class="product" alt="Shoes" />
             </div>
             {% if not success %}
             <div class="rightside">
@@ -24,7 +24,7 @@
                     <select class="inputbox" name="payment_mode" id="payment_mode" >
                         <option value="">--Select a Payment Mode--</option>
                         <option value="card">Card Payment</option>
-                        <option value="cash">Cash Payment</option>
+                        <!--<option value="cash">Cash Payment</option>-->
                         <option value="upi">UPI Payment</option>
                     </select>
                     <input type="number" name="pkgid" value="{{package.pkg_id}}" hidden>
