@@ -91,9 +91,16 @@
       </div>
     </div><!-- End Page Title -->
 
-      <div id="result">
+    <div id="result" class="survcontainer">
+      <div class="form-control">
         <p>{{llama_response | safe}}</p>
       </div>
+      {% if member %}
+      <div class="form-control">
+        
+      </div>
+      {% endif %}
+    </div>
     </section>
   </main>
 

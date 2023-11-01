@@ -192,8 +192,9 @@ class DietPro(db.Model):
     activity = db.Column(db.String(50))
     health = db.Column(db.String(200))
     daily_calorie = db.Column(db.Float)
+    diet_recommendation = db.Column(db.String(500))
     
-    def __init__(self,name,gender,age,weight,height,activity,health,member_id=None):
+    def __init__(self,name,gender,age,weight,height,activity,health):
         self.name = name
         self.gender = gender
         self.age = age
@@ -201,8 +202,12 @@ class DietPro(db.Model):
         self.height = height
         self.activity = activity
         self.health = health
-        self.member_id = member_id
     
+    def save(self,member):
+        self.member_id = member.id
+        db.session.add(self)
+        db.session.commit()
+
     def set_goal(self):
         #find user's Basal Metabolic Rate
         bmr = 0.0
@@ -235,6 +240,11 @@ class DietPro(db.Model):
         #calculate users calorie goal for daily intake
         calorie_change = 108.7573 * (weight_goal - self.weight)
         self.daily_calorie = tdee + calorie_change
+
+    def recommendation_save(member,recommendation):
+        dietpro = DietPro.query.filter_by(member_id=member.id).first()
+        dietpro.diet_recommendation = recommendation
+        db.session.commit()
 
 class Payments(db.Model):
     payment_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -410,12 +420,17 @@ def dietpro():
 
         dietpro = DietPro(name,gender,age,weight,height,activity,health)
         dietpro.set_goal()
+
+        if isinstance(current_user,Members):
+            dietpro.save(current_user)
+
         return redirect(url_for('dietpro_result',calorie=dietpro.daily_calorie))
     return render_template('dietpro.html')
 
 #DietPro Result
 @app.route("/dietpro/result/<float:calorie>",methods=["GET","POST"])
 def dietpro_result(calorie):
+    member = current_user
     url = "https://www.llama2.ai/api"
     prompt = f"Suggest me a diet plan if my daily calorie requirement is: {calorie}\n. Your response should be of the following format:\n1. xx% protein xx% fat xx% carbohydrate\n2. One suggestions for breakfast\n3. One suggestions for lunch\n4. One suggestions for dinner. Give result  only in these 4 points, dont give anything extra. Also be sure to number these 4 points. Dont give any breakdowns, just the 4 points. Nothing more nothing less."
     json_data = {
@@ -438,10 +453,17 @@ def dietpro_result(calorie):
         start = response.text.index('\n') + 1
         response.text.index('4')
         llama_response = response.text[start:].replace('\n','<br>')
-        return render_template('dietpro_result.html', llama_response=llama_response)
+        if isinstance(member,Members):
+            DietPro.recommendation_save(member,llama_response)
+            return render_template('dietpro_result.html', llama_response=llama_response,member=member)
+        else:
+            return render_template('dietpro_result.html', llama_response=llama_response)
     except Exception as e:
         llama_response = f"Here's a suggested diet plan that meets your daily calorie requirement of {calorie}:<br>1. 15% protein, 25% fat, 60% carbohydrate<br>Breakfast:<br>1. Greek yogurt with mixed berries and granola<br>2. Avocado toast with scrambled eggs<br>Lunch:<br>1. Grilled chicken breast with quinoa salad<br>2. Tuna salad sandwich on whole grain bread<br>Dinner:<br>1. Baked salmon with roasted sweet potato and green beans<br>2. Stir-fry chicken breast with brown rice and broccoli"
-        return render_template('dietpro_result.html', llama_response=llama_response)
+        if isinstance(member,Members):
+            return render_template('dietpro_result.html', llama_response=llama_response,member=member)
+        else:
+            return render_template('dietpro_result.html', llama_response=llama_response)
 
 #user logout
 @app.route("/logout")
