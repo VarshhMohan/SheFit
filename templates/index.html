@@ -59,25 +59,10 @@
           <li><a href="#features">Features</a></li>
           <li><a href="#pricing">Pricing</a></li>
           <li><a href="#faq">FAQs</a></li>
-          <!--<li><a href="#team">Team</a></li>-->
-          <!--<li class="dropdown has-dropdown"><a href="#"><span>Dropdown</span> <i class="bi bi-chevron-down"></i></a>
-            <ul class="dd-box-shadow">
-              <li><a href="#">Dropdown 1</a></li>
-              <li class="dropdown has-dropdown"><a href="#"><span>Deep Dropdown</span> <i class="bi bi-chevron-down"></i></a>
-                <ul class="dd-box-shadow">
-                  <li><a href="#">Deep Dropdown 1</a></li>
-                  <li><a href="#">Deep Dropdown 2</a></li>
-                  <li><a href="#">Deep Dropdown 3</a></li>
-                  <li><a href="#">Deep Dropdown 4</a></li>
-                  <li><a href="#">Deep Dropdown 5</a></li>
-                </ul>
-              </li>
-              <li><a href="#">Dropdown 2</a></li>
-              <li><a href="#">Dropdown 3</a></li>
-              <li><a href="#">Dropdown 4</a></li>
-            </ul>
-          </li>-->
           <li><a href="#contact">Contact</a></li>
+          {% if member %}
+          <li><a href="{{url_for('dashboard')}}" >Dashboard</a></li>
+          {% endif %}
         </ul>
 
         <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
@@ -85,7 +70,7 @@
 
       
       <!--MAKE THIS INTO LOGIN!!!!-->  
-      <a class="btn-getstarted" href="{{url_for('login')}}" style="background-color: #896031;">login</a>
+      <a class="btn-getstarted" href="{{url_for('login')}}" style="background-color: #896031;">Login</a>
 
     </div>
   </header><!-- End Header -->
@@ -326,7 +311,7 @@
             <p>
               DietPro<sup>TM</sup> is an innovative feature that tailors your dietary plan to suit your unique lifestyle, goals, and needs. We understand that achieving your health and fitness goals goes hand-in-hand with a well-balanced, personalized diet. That's why we've created DietPro, a tool designed to revolutionize your nutritional journey.
             </p>
-            <a href="diet.html" class="btn btn-get-started">Get Started</a>
+            <a href="{{url_for('dietpro')}}" class="btn btn-get-started">Get Started</a>
           </div>
           <div class="col-lg-7 order-1 order-lg-2 d-flex align-items-center" data-aos="zoom-out" data-aos-delay="100">
             <div class="image-stack">
@@ -485,7 +470,11 @@
                 <li {{ "class=na" if not pkg.feature_courses }} ><i class="bi bi-{{ 'check' if pkg.feature_courses else 'x' }}"></i> <span>Online Courses</span></li>
                 <li {{ "class=na" if not pkg.feature_schedules }} ><i class="bi bi-{{ 'check' if pkg.feature_schedules else 'x' }}"></i> <span>Flexible Schedules</span></li>
               </ul>
-              <div class="text-center"><a href="{{url_for('login')}}" class="buy-btn">Buy Now</a></div>
+              {% if member %}
+              <div class="text-center"><a href="{{url_for('payment',id=pkg.pkg_id)}}" class="buy-btn">Buy Now</a></div>
+              {% else %}
+              <div class="text-center"><a href="{{url_for('login')}}" class="buy-btn">Join us</a></div>
+              {% endif %}
             </div>
           </div>
           {% endfor %}

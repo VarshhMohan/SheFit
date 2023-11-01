@@ -1,0 +1,117 @@
+<html>
+
+<head>
+    <title>Payment</title>
+    <link href="/static/img/icons8-star-filled-50.png" rel="icon">
+    <link href="/static/assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+    <link rel="stylesheet" href="/static/assets/css/payment.css" />
+</head>
+
+<body>
+    <div class="mainscreen_div">
+        <img src="/static/img/paybg.avif" class="mainscreen" alt="">
+        <div class="card">
+            <div class="leftside">
+                <img src="/static/img/bro.avif" class="product" alt="Shoes" />
+            </div>
+            {% if not success %}
+            <div class="rightside">
+                <form method="post">
+                    <h2>Rs. {{package.price}}</h2>
+                    <h3>Payment Information</h3>
+
+                    <p>Payment Mode</p>
+                    <select class="inputbox" name="payment_mode" id="payment_mode" >
+                        <option value="">--Select a Payment Mode--</option>
+                        <option value="card">Card Payment</option>
+                        <option value="cash">Cash Payment</option>
+                        <option value="upi">UPI Payment</option>
+                    </select>
+                    <input type="number" name="pkgid" value="{{package.pkg_id}}" hidden>
+
+                    <div id="cardPayment" style="display: none;">
+                        <p>Cardholder Name</p>
+                        <input type="text" class="inputbox" name="name"  />
+
+                        <p>Card Number</p>
+                        <input type="number" class="inputbox" name="card_number" id="card_number"  />
+
+                        <p>Expiry Date</p>
+                        <input type="text" class="inputbox" maxlength="4" name="exp_date" placeholder="MMYY"  />
+
+                        <p>CVV</p>
+                        <input type="password" class="inputbox" name="cvv"  />
+
+                    </div>
+
+                    <div id="cashPayment" style="display: none;">
+                        <p>Note down the Receipt No. in next step</p>
+
+                        <!-- Add other cash payment fields here -->
+                    </div>
+
+                    <div id="upiPayment" style="display: none;">
+                        <p>UPI ID</p>
+                        <input type="text" class="inputbox" name="upi_id"  />
+
+                        <!-- Add other UPI payment fields here -->
+                    </div>
+
+                    <p></p>
+                    <input type="submit" class="button" name="Submit" value="CheckOut">
+                </form>
+
+
+
+            </div>
+            {% elif success['type'] != 'cash' %}
+            <div class="rightside">
+                <div class="success-checkmark">
+                    <div class="check-icon">
+                        <span class="icon-line line-tip"></span>
+                        <span class="icon-line line-long"></span>
+                        <div class="icon-circle"></div>
+                        <div class="icon-fix"></div>
+                    </div>
+                </div>
+                <a href="{{url_for('dashboard')}}">Go to Dashboard</a>
+
+            </div>
+            {% else %}
+            <div class="rightside">
+                <div class="success-checkmark">
+                    <div class="check-icon">
+                        <p>Use this Number to Pay at Counter:</p>
+                        <h3>{{success['r_no']}}</h3>
+                    </div>
+                </div>
+                <a href="{{url_for('dashboard')}}">Go to Dashboard</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+<script>
+    // JavaScript to show/hide payment sections based on the selected payment mode
+    const paymentModeSelect = document.getElementById("payment_mode");
+    const cardPaymentSection = document.getElementById("cardPayment");
+    const cashPaymentSection = document.getElementById("cashPayment");
+    const upiPaymentSection = document.getElementById("upiPayment");
+
+    paymentModeSelect.addEventListener("change", function () {
+        cardPaymentSection.style.display = "none";
+        cashPaymentSection.style.display = "none";
+        upiPaymentSection.style.display = "none";
+
+        const selectedPaymentMode = paymentModeSelect.value;
+        if (selectedPaymentMode === "card") {
+            cardPaymentSection.style.display = "block";
+        } else if (selectedPaymentMode === "cash") {
+            cashPaymentSection.style.display = "block";
+        } else if (selectedPaymentMode === "upi") {
+            upiPaymentSection.style.display = "block";
+        }
+    });
+</script>
+
+</html>

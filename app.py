@@ -2,12 +2,13 @@
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning, module="sqlalchemy")
 
+import requests
 from flask import Flask, request, flash, url_for, redirect, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, current_user
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
-from datetime import datetime 
+from datetime import datetime, date
 
 
 
@@ -84,7 +85,17 @@ class Subscription(db.Model):
     subscription_id = db.Column(db.Integer,primary_key=True,autoincrement=True)
     pkg_id = db.Column(db.Integer)
     mem_id = db.Column(db.String(10))
+    tra_id = db.Column(db.String(10))
     completed = db.Column(db.Integer)
+
+    def __init__(self,pkg_id,mem_id,tra_id):
+        self.pkg_id = pkg_id
+        self.mem_id = mem_id
+        self.tra_id = tra_id
+        self.completed = 0
+        db.session.add(self)
+        db.session.commit()
+    
 
 
 class Members(db.Model,UserMixin):
@@ -94,7 +105,6 @@ class Members(db.Model,UserMixin):
     email = db.Column(db.String(100), nullable=False)
     member_since = db.Column(db.DateTime)
     password = db.Column(db.String(128), nullable=False)
-    trainer = db.Column(db.String(10))
     
     def __init__(self, name, phone_number, email, password, member_since):
         last_mem = Members.query.order_by(Members.id.desc()).first()
@@ -107,11 +117,6 @@ class Members(db.Model,UserMixin):
         if last_mem:
             last_id = int(last_mem.id[3:])
         self.id = f"mem{last_id+1}"
-
-    def choose_trainer(self,trainer_id):
-        self.trainer = trainer_id
-        db.session.add(self)
-        db.session.commit()
 
     def register(self):
         db.session.add(self)
@@ -187,8 +192,9 @@ class DietPro(db.Model):
     activity = db.Column(db.String(50))
     health = db.Column(db.String(200))
     daily_calorie = db.Column(db.Float)
+    diet_recommendation = db.Column(db.String(500))
     
-    def __init__(self,name,gender,age,weight,height,activity,health,member_id=None):
+    def __init__(self,name,gender,age,weight,height,activity,health):
         self.name = name
         self.gender = gender
         self.age = age
@@ -196,8 +202,12 @@ class DietPro(db.Model):
         self.height = height
         self.activity = activity
         self.health = health
-        self.member_id = member_id
     
+    def save(self,member):
+        self.member_id = member.id
+        db.session.add(self)
+        db.session.commit()
+
     def set_goal(self):
         #find user's Basal Metabolic Rate
         bmr = 0.0
@@ -209,9 +219,9 @@ class DietPro(db.Model):
         #calculating users Total Daily Energy Expenditure
         activity_mapping = {
             'sedentary' : 1.2,
-            'lightly active' : 1.375,
-            'moderately active' : 1.55,
-            'very active' : 1.725
+            'light' : 1.375,
+            'moderate' : 1.55,
+            'very' : 1.725
         }
         activity_val = activity_mapping[self.activity]
 
@@ -231,7 +241,47 @@ class DietPro(db.Model):
         calorie_change = 108.7573 * (weight_goal - self.weight)
         self.daily_calorie = tdee + calorie_change
 
+    def recommendation_save(member,recommendation):
+        dietpro = DietPro.query.filter_by(member_id=member.id).first()
+        dietpro.diet_recommendation = recommendation
+        db.session.commit()
 
+class Payments(db.Model):
+    payment_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    amount = db.Column(db.Float)
+    payment_date = db.Column(db.Date)
+    subscription_id = db.Column(db.Integer)
+
+class CardPayment(Payments):
+    card_number = db.Column(db.String(16))
+    card_holder = db.Column(db.String(255))
+    expiration_date = db.Column(db.String(5))
+
+    def __init__(self,amount,subs_id,card_number,card_holder,exp):
+        super().__init__(amount=amount, payment_date=date.today(), subscription_id = subs_id)
+        self.card_number = card_number
+        self.card_holder = card_holder
+        self.expiration_date = exp
+        db.session.add(self)
+        db.session.commit()
+
+class CashPayment(Payments):
+    cash_receipt_number = db.Column(db.String(10))
+
+    def __init__(self,amount,subs_id,r_no):
+        super().__init__(amount=amount, payment_date=date.today(), subscription_id = subs_id)
+        self.cash_receipt_number = r_no
+        db.session.add(self)
+        db.session.commit()
+
+class UPIPayment(Payments):
+    upi_id = db.Column(db.String(50))
+
+    def __init__(self,amount,subs_id, upi_id):
+        super().__init__(amount=amount, payment_date=date.today(), subscription_id = subs_id)
+        self.upi_id = upi_id
+        db.session.add(self)
+        db.session.commit()
 
 
         
@@ -245,7 +295,11 @@ class DietPro(db.Model):
 @app.route('/')
 def homepage():
     packages = Package.query.all()
-    return render_template('index.html', pkgs=packages)
+    member=current_user
+    if isinstance(member,Members):
+        return render_template('index.html', pkgs=packages, member=member)
+    else:
+        return render_template('index.html', pkgs=packages)
 
 #Member registration
 @app.route('/register', methods=["GET", "POST"])
@@ -310,9 +364,47 @@ def login():
 @app.route("/dashboard")
 def dashboard():
     member = current_user
-    if isinstance(member,Members):
-        return member.email
-    return redirect(url_for("login"))   
+    if not isinstance(member,Members):
+        return redirect(url_for("login"))
+    
+    subscription = Subscription.query.filter_by(mem_id=member.id).first()
+    return render_template('dashboard.html',member=member,subscription=subscription)
+
+
+@app.route('/payment/<int:id>',methods=["GET","POST"])
+def payment(id):
+    member = current_user
+    if not isinstance(member,Members):
+        return redirect(url_for('login'))
+    if request.method == 'GET':
+        package = Package.query.get(id)
+        return render_template('payment.html',package=package)
+    else:
+        payment_mode = request.form.get('payment_mode')
+        pkg_id = request.form.get('pkgid')
+        package = Package.query.get(pkg_id)
+        amt = package.price
+        subscription = Subscription(pkg_id,member.id,None)
+        subs_id = subscription.subscription_id
+        success = {'type':payment_mode}
+        if payment_mode == "card":
+            name = request.form.get('name')
+            card_number = request.form.get('card_number')
+            exp_date = request.form.get('exp_date')
+            cvv = request.form.get('cvv')
+            CardPayment(package.price, subs_id,card_number,name,exp_date)
+
+        elif payment_mode == "cash":
+            receipt = CashPayment(package.price,subs_id,'not_paid')
+            r_no = receipt.payment_id
+            success['r_no']=r_no
+
+        elif payment_mode == "upi":
+            upi_id = request.form.get('upi_id')
+            UPIPayment(package.price,subs_id,upi_id)
+        return render_template('payment.html',success=success)
+        
+
 
 #DietPro™
 @app.route("/dietpro",methods=["GET","POST"])
@@ -328,13 +420,50 @@ def dietpro():
 
         dietpro = DietPro(name,gender,age,weight,height,activity,health)
         dietpro.set_goal()
-        return str(dietpro.daily_calorie)
+
+        if isinstance(current_user,Members):
+            dietpro.save(current_user)
+
+        return redirect(url_for('dietpro_result',calorie=dietpro.daily_calorie))
     return render_template('dietpro.html')
 
 #DietPro Result
-@app.route("/dietpro/result",methods=["GET","POST"])
-def dietpro_result():
-    return 2
+@app.route("/dietpro/result/<float:calorie>",methods=["GET","POST"])
+def dietpro_result(calorie):
+    member = current_user
+    url = "https://www.llama2.ai/api"
+    prompt = f"Suggest me a diet plan if my daily calorie requirement is: {calorie}\n. Your response should be of the following format:\n1. xx% protein xx% fat xx% carbohydrate\n2. One suggestions for breakfast\n3. One suggestions for lunch\n4. One suggestions for dinner. Give result  only in these 4 points, dont give anything extra. Also be sure to number these 4 points. Dont give any breakdowns, just the 4 points. Nothing more nothing less."
+    json_data = {
+        "systemPrompt": "You are a helpful assistant.",
+        "temperature": 0.75,
+        "topP": 0.9,
+        "maxTokens": 500,
+        "version": "2796ee9483c3fd7aa2e171d38f4ca12251a30609463dcfd4cd76703f22e96cdf",
+        "prompt": prompt  # Replace with your prompt
+    }
+
+    headers = {
+        "Content-Type": "application/json"
+    }
+
+    try:
+        response = requests.post(url, json=json_data, headers=headers)
+        response.raise_for_status()  # Raise an exception for HTTP errors.
+        print(response.text)
+        start = response.text.index('\n') + 1
+        response.text.index('4')
+        llama_response = response.text[start:].replace('\n','<br>')
+        if isinstance(member,Members):
+            DietPro.recommendation_save(member,llama_response)
+            return render_template('dietpro_result.html', llama_response=llama_response,member=member)
+        else:
+            return render_template('dietpro_result.html', llama_response=llama_response)
+    except Exception as e:
+        llama_response = f"Here's a suggested diet plan that meets your daily calorie requirement of {calorie}:<br>1. 15% protein, 25% fat, 60% carbohydrate<br>Breakfast:<br>1. Greek yogurt with mixed berries and granola<br>2. Avocado toast with scrambled eggs<br>Lunch:<br>1. Grilled chicken breast with quinoa salad<br>2. Tuna salad sandwich on whole grain bread<br>Dinner:<br>1. Baked salmon with roasted sweet potato and green beans<br>2. Stir-fry chicken breast with brown rice and broccoli"
+        if isinstance(member,Members):
+            return render_template('dietpro_result.html', llama_response=llama_response,member=member)
+        else:
+            return render_template('dietpro_result.html', llama_response=llama_response)
 
 #user logout
 @app.route("/logout")
