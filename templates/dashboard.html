@@ -37,6 +37,7 @@
   * Author: BootstrapMade.com
   * License: https://bootstrapmade.com/license/
   ======================================================== -->
+  
 </head>
 
 <body class="index-page" data-bs-spy="scroll" data-bs-target="#navmenu">
@@ -90,14 +91,44 @@
         <div class="row">
           <div class="col-lg-13">
           </div>
-          {% if subscription %}
+          <div class="row">
+            {% if subscription %}
+            <div class="row">
+              <div class="col-lg-10">
+                <h3 style="color: aliceblue;">
+                  <h3 style="color: aqua;">Active Package:</h3> {{package.name}}
+                </h3>
+                <h3 style="color: aliceblue;">
+                  <h3 style="color: aqua;">Subscription valid till:</h3> {{subscription.end_date}}
+                </h3>
+              </div>
+            </div>
+            {% else %}
+            <h3 style="color: aliceblue;">You dont have any active Subscription</h3>
+            <a href="{{url_for('homepage')}}#pricing">
+              <h4 style="color: aliceblue;">Subscribe now</h4>
+            </a>
+            {% endif %}
+          </div>
+          <div class="row">
+            {% if subscription and dietpro %}
+            <div class="row">
+              <div class="col-lg-10">
+                <h3 style="color: aliceblue;">Your diet reccomendation:</h3>
+              </div>
+              <h4 style="color: aliceblue;"> {{dietpro.diet_recommendation | safe}} </h4>
+            </div>
+            {% elif subscription and not dietpro %}
+            <div class="row">
+              <div class="col-lg-10">
+                <h3 style="color: aliceblue;">Get Your diet recommendations today:
+                  <a href="{{url_for('dietpro')}}"  class="dietbtn" style="border: 2px solid  rgb(156, 99, 25); padding: 5px;">Diet Plan</a>
+                </h3>
+              </div>
+            </div>
+            {% endif %}
+          </div>
 
-          {% else %}
-          <h3>You dont have any active Subscription</h3>
-          <a href="{{url_for('homepage')}}#pricing">
-            <h4>Subscribe now</h4>
-          </a>
-          {% endif %}
         </div>
       </div>
 
