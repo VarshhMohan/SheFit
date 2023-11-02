@@ -14,21 +14,21 @@
          <header style="font-size: x-large;font-weight: bold;">SIGNUP</header>
          <form action="#" method="post">
             <div class="input-field">
-                <input type="text" name="name" required>
-                <label>Name</label>
+                <input type="text" name="name" placeholder="Name" required>
+                <!-- <label>Name</label> -->
             </div>
             <div class="input-field">
-              <input type="text" name="phone_number" required>
-              <label>Phone Number</label>
+              <input type="text" name="phone_number" placeholder="Phone" required>
+              <!-- <label>Phone Number</label> -->
           </div>
           <div class="input-field">
             <input type="text" name="email" required>
             <label>Email</label>
         </div>
             <div class="input-field">
-               <input class="pswrd" name="password" type="password" required>
+               <input class="pswrd" name="password" type="password" placeholder="Password" required>
                <span class="show">SHOW</span>
-               <label>Password</label>
+               <!-- <label>Password</label> -->
             </div>
             {%if message_id==1%}
             <p style="color: brown;">Email already registered</p>
