@@ -102,7 +102,6 @@ class Subscription(db.Model):
         db.session.commit()
     
 
-
 class Members(db.Model,UserMixin):
     id = db.Column(db.String(10), primary_key=True)
     name = db.Column(db.String(100))
